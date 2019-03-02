@@ -355,6 +355,10 @@ stack.  This stack grows downwards from high addresses.  Figure~
 
 The end of the input argument area shall be aligned on a 16 (32 or 64, if
 \texttt{__m256} or \texttt{__m512} is passed on stack) byte boundary.
+\footnote{The maximum aligned boundary is the maximum alignment of
+all variables passed on stack.  In C11, variable of type
+\code{typedef struct \{ _Alignas (512) int i; \} var_t;}
+is aligned to 512 bytes.}
 In other words, the value $(\RSP + 8)$ is always a multiple of $16$
 ($32$ or $64$) when
 control is transferred to the function entry point.  The
@@ -517,7 +521,9 @@ Once arguments are classified, the registers get assigned (in
 left-to-right order) for passing as follows:
 
 \begin{enumerate}
-\item If the class is MEMORY, pass the argument on the stack.
+\item If the class is MEMORY, pass the argument on the stack at an
+  address respecting the arguments alignment (which might be more
+  than its natural alignement).
 
 \item If the class is INTEGER, the next available register of the
   sequence \RDI, \RSI, \RDX, \RCX, \reg{r8} and \reg{r9} is
