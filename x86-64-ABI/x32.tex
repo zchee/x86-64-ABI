@@ -50,6 +50,28 @@ extern __thread int x;
 \Hrule
 \end{table}
 
+In TLSDESC code sequence, \code{leal} instruction must be encoded with
+\code{rex} prefix even if it isn't required by destination register.
+If the \code{leal} encoding has a variable length, linker can't tell
+where it starts and can't safely perform GDesc -> IE/LE optimization.
+
+\begin{table}[H]
+\Hrule
+\caption{General Dynamic Model Code Sequence with TLSDESC}
+\begin{center}
+\small\code{
+\begin{tabular}{lll|lll}
+\multicolumn{3}{c}{LP64} & \multicolumn{3}{c}{ILP32} \\
+\hline
+0x00 & leaq & x@tlsdesc(\%rip),\%rax & 0x00 & rex leal  & x@tlsdesc(\%rip),\%eax \\
+0x07 & call & *x@tlsdesc((\%rax) & 0x07 & call & *x@tlsdesc(\%eax) \\
+0x08 & add & \%fs:0x0,\%eax & 0x09 & add & \%fs:0x0,\%eax \\
+\end{tabular}
+}
+\end{center}
+\Hrule
+\end{table}
+
 \item[\textindex{Initial Exec Model}]
   Load address of \code{x} into \reg{rax}.  Instruction \code{addl}
   must be encoded with \code{rex} prefix even if it isn't required by
@@ -138,6 +160,27 @@ or
 0x00 & leaq  & x@tlsld(\%rip),\%rdi	& 0x00 & leaq & x@tlsld(\%rip),\%rdi\\
 0x07 & call  & \_\_tls\_get\_addr@plt	& 0x07 & call & \_\_tls\_get\_addr@plt\\
 0x0c & addq  & \$x@dtpoff,\%rax		& 0x0c & addl & \$x@dtpoff,\%eax\\
+\end{tabular}
+}
+\end{center}
+\Hrule
+\end{table}
+
+For code sequence with TLSDESC, local dynamic model is similar to general
+dynamic model.  The same encoding requirement for \code{leal} instruction
+also applies.
+
+\begin{table}[H]
+\Hrule
+\caption{General Dynamic Model Code Sequence with TLSDESC}
+\begin{center}
+\small\code{
+\begin{tabular}{lll|lll}
+\multicolumn{3}{c}{LP64} & \multicolumn{3}{c}{ILP32} \\
+\hline
+0x00 & leaq & x@tlsdesc(\%rip),\%rax & 0x00 & rex leal  & x@tlsdesc(\%rip),\%eax \\
+0x07 & call & *x@tlsdesc((\%rax) & 0x07 & call & *x@tlsdesc(\%eax) \\
+0x08 & add & \%fs:0x0,\%eax & 0x09 & add & \%fs:0x0,\%eax \\
 \end{tabular}
 }
 \end{center}
@@ -265,6 +308,22 @@ or
 
 \begin{table}[H]
 \Hrule
+\caption{GDesc -> IE Code Transition}
+\begin{center}
+\small\code{
+\begin{tabular}{lll|lll}
+\multicolumn{3}{c}{GDesc} & \multicolumn{3}{c}{LE} \\
+\hline
+0x00 & rex leal & x@tlsdes(\%rip),\%eax	& 0x00 & rex movl & x@gottpoff(\%rip), \%eax \\
+0x07 & call & *foo@TLSCALL(\%eax) & 0x07 & nopl & (\%rax) \\
+\end{tabular}
+}
+\end{center}
+\Hrule
+\end{table}
+
+\begin{table}[H]
+\Hrule
 \caption{GD -> LE Code Transition}
 \begin{center}
 \small\code{
@@ -275,6 +334,22 @@ or
 0x07 & .word & 0x6666			& 0x08 & leal  & x@tpoff(\%rax),\%eax\\
 0x09 & rex64 &				&      &       & \\
 0x0a & call  & \_\_tls\_get\_addr@plt	&      &       & \\
+\end{tabular}
+}
+\end{center}
+\Hrule
+\end{table}
+
+\begin{table}[H]
+\Hrule
+\caption{GDesc -> LE Code Transition}
+\begin{center}
+\small\code{
+\begin{tabular}{lll|lll}
+\multicolumn{3}{c}{GDesc} & \multicolumn{3}{c}{LE} \\
+\hline
+0x00 & rex leal & x@tlsdes(\%rip),\%eax	& 0x00 & rex movl & \$x@tpoff, \%eax \\
+0x07 & call & *foo@TLSCALL(\%eax) & 0x07 & nopl & (\%rax) \\
 \end{tabular}
 }
 \end{center}
