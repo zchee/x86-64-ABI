@@ -432,11 +432,6 @@ use the faster \op{femms} instruction.}  The direction flag \code{DF} in the
 entry and return.  Other user flags have no specified role in the
 standard calling sequence and are {\em not} preserved across calls.
 
-The control bits of the \code{MXCSR} register are callee-saved
-(preserved across calls), while the status bits are caller-saved (not
-preserved).  The x87 status word register is caller-saved, whereas
-the x87 control word is callee-saved.
-
 \subsection{The Stack Frame}
 \label{sec-stack-frame}
 
@@ -712,7 +707,8 @@ arguments & No\\
 \reg{st0},\reg{st1} & temporary registers, used to return \code{long double} arguments & No \\
 \reg{st2}--\reg{st7} & temporary registers & No \\
 \reg{fs}& thread pointer & Yes\\
-\code{mxcsr}& SSE2 control and status word & partial\\
+\code{mxcsr SB} & SSE2 status bits & No \\
+\code{mxcsr CB} & SSE2 control bits & Limited-access \\
 \code{x87 SW}& x87 status word & No\\
 \code{x87 CW}& x87 control word & Yes\\
 \code{tilecfig} & Tile control register & No \\
@@ -1004,7 +1000,7 @@ The \xARCH architecture defines floating point instructions.  At
 process startup the two floating point units, SSE2 and x87, both have
 all floating-point exception status flags cleared.  The status of the
 control words is as defined in tables~\ref{x87-fpucw} and
-\ref{mxcsr-status}.
+\ref{mxcsr-control}.
 
 \begin{table}[H]
 \Hrule
@@ -1029,8 +1025,8 @@ control words is as defined in tables~\ref{x87-fpucw} and
 
 \begin{table}[H]
 \Hrule
-  \caption{MXCSR Status Bits}
-  \label{mxcsr-status}
+  \caption{MXCSR Control Bits}
+  \label{mxcsr-control}
   \begin{center}
     \begin{tabular}[t]{l|l|l}
       \multicolumn{1}{c}{Field} & \multicolumn{1}{c}{Value}& \multicolumn{1}{c}{Note} \\
@@ -1048,6 +1044,93 @@ control words is as defined in tables~\ref{x87-fpucw} and
   \end{center}
 \Hrule
 \end{table}
+
+The control bits of the \code{MXCSR} register and the x87 control word
+are identified as limited access because this ABI manages how they are
+to be modified and preserved across function calls. Limited-access bits
+may be changed across function calls only if the called function has
+specific permission to do so as indicated by the following conditions.
+A function without permission to change the limited-access bits across
+a function call shall save the value of the register before modifying
+the bits and restore it before returning to its calling function.
+
+\paragraph{Limited-Access Conditions}
+
+Standard library functions expressly defined to change the state of
+limited-access bits are not constrained by nonvolatile preservation
+rules; for example, the \code{fesetround} and \code{feenableexcept}
+functions.  All other standard library functions shall save the old
+value of these bits on entry, change the bits for their purpose, and
+restore the bits before returning.
+
+Where a standard library function, such as \code{qsort}, calls functions
+provided by an application, the following rules shall be observed:
+
+\begin{itemize}
+\item The limited-access bits, on entry to the first call to such a
+callback, must have the values they had on entry to the library function.
+
+\item The limited-access bits, on entry to a subsequent call to such a
+callback, must have the values they had on exit from the previous call
+to such a callback.
+
+\item The limited-access bits, on exit from the library function, must
+have the values they had on exit from the last call to such a callback.
+\end{itemize}
+
+The compiler can directly generate code that saves and restores the
+limited-access bits.
+
+The values of the limited-access bits are unspecified on entry into a
+signal handler because a library or user function can temporarily
+modify the limited-access bits when the signal is taken.
+
+When \code{setjmp} function returns from its first call (also known as
+direct invocation), it does not change the limited access bits. The
+limited-access bits have the values they had on entry to the
+\code{setjmp} function.
+
+When \code{longjmp} function is invoked, it appears to be returning
+from a call to \code{setjmp} function.  In this instance, the
+limited- access bits are not restored to the values they had on entry
+to the \code{setjmp} function.
+
+C library functions, such as \code{_FPU_SETCW} defined in
+<fpu_control.h>, may modify the limited-access bits of the control
+bits of the \code{MXCSR} register and the x87 control word.
+Additional C99 functions that can modify the control bits of the
+\code{MXCSR} register and the x87 control word are defined in <fenv.h>.
+
+The unwinder does not modify limited-access bits.  To avoid the overhead
+of saving and restoring the control bits of the \code{MXCSR} register
+and the x87 control word on every call, it is only necessary to save
+them briefly before the call and to restore them after any instructions
+or groups of instructions that need to change its control bits have been
+completed.
+
+If an exception and the resulting signal occur while the control bits
+of the \code{MXCSR} register and the x87 control word are temporarily
+modified, the signal handler cannot rely on the default control flag
+settings and must behave as follows:
+
+\begin{itemize}
+\item If the signal handler will unwind the stack, print a traceback,
+and abort the program, no other special handling is needed.
+
+\item If the signal handler will adjust some register values (for
+example, replace a NaN with a zero or infinity) and then resume
+execution, no other special handling is needed.  There is one
+exception; if the signal handler changed the control bits, it
+should restore them.
+
+\item If the signal handler will unwind the stack part way and resume
+execution in a user exception handler, the application should save
+the control bits of the \code{MXCSR} register and the x87 control word
+beforehand and the exception handler should restore them.
+\end{itemize}
+
+The status bits of the \code{MXCSR} register and the x87 status word
+register are not preserved across function calls.
 
 The \code{rFLAGS} register contains the system flags, such as the
 direction flag and the carry flag.  The low 16 bits (FLAGS portion)
