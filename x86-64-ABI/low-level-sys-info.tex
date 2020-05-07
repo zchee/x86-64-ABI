@@ -403,6 +403,15 @@ vector register to refer to either SSE, AVX or AVX-512 register.  In
 addition, Intel AVX-512 also provides 8 vector mask registers (\reg{k0}
 - \reg{k7}), each 64-bit wide.
 
+Intel Advanced Matrix Extensions (Intel AMX) is a programming
+paradigm consisting of two components: a set of 2-dimensional registers
+(tiles) representing sub-arrays from a larger 2-dimensional memory image,
+and accelerators able to operate on tiles.  Capability of Intel AMX
+implementation is enumerated by palettes.  Two palettes are supported:
+palette 0 represents the initialized state and palette 1 consists of
+8 tile registers (\reg{tmm0} - \reg{tmm7}) of up to 1 KB size, which
+is controlled by a tile control register.
+
 This subsection discusses usage of each register.  Registers \RBP, \RBX and
 \reg{r12} through \reg{r15} ``belong'' to the calling function and the
 called function is required to preserve their values.  In other words,
@@ -665,6 +674,7 @@ bit.}.
 \begin{figure}
 \Hrule
   \caption{Register Usage}
+  \myfontsize
   \label{fig-reg-usage}
   \begin{center}
     \begin{tabular}{l|p{7.95cm}|l}
@@ -697,6 +707,7 @@ chain pointer & No \\
 arguments & No\\
 \reg{xmm2}--\reg{xmm7} & used to pass floating point arguments & No\\
 \reg{xmm8}--\reg{xmm15} & temporary registers & No\\
+\reg{tmm0}--\reg{tmm7}& temporary registers & No\\
 \reg{mm0}--\reg{mm7}& temporary registers & No\\
 \reg{k0}--\reg{k7} & temporary registers & No\\
 \reg{st0},\reg{st1} & temporary registers, used to return \code{long double} arguments & No \\
@@ -705,6 +716,7 @@ arguments & No\\
 \code{mxcsr}& SSE2 control and status word & partial\\
 \code{x87 SW}& x87 status word & No\\
 \code{x87 CW}& x87 control word & Yes\\
+\code{tilecfig} & Tile control register & No \\
     \end{tabular}
 
   \end{center}
