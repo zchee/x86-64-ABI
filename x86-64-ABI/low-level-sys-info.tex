@@ -5,47 +5,32 @@
 
 \subsection{Processor Architecture}
 
-Any program or kernel can expect that a \xARCH processor implements
-the features mentioned in table~\ref{features}.  In general a program
-has to check itself whether those features are available but for
-\xARCH systems, these should always be available.
-Table~\ref{features} uses the names for the processor features as
-documented in the processor manual.
+Any program can expect that an \xARCH processor implements the
+features mentioned in table~\ref{features}.  Most feature names
+correspond to CPUID bits, as described in the processor manual.
+Exceptions are OSXFSR are and SCE, which are controlled by bits in the
+\reg{cr4} register and the \verb|IA32_EFER| MSR.
 
 \begin{table}
-\Hrule
 \caption{Required Processor Features}\label{features}
   \begin{center}
-\begin{tabular}{l|l}
-\hline\noalign{\smallskip}
-Feature & Comment\\
-\hline
-\multicolumn{2}{c}{Features need for programs}\\
-\hline
-fpu & Necessary for \code{long double}, MMX\\
-tsc & User-visible\\
-cx8 & User-visible\\
-cmov& User-visible\\
-mmx & User-visible\\
-sse & User-visible, required for \code{float}\\
-sse2& User-visible, required for \code{double}\\
-fxsr& Required for SSE/SSE2 \\
-syscall& For calling the kernel\\
-\hline\noalign{\smallskip}
-\multicolumn{2}{c}{Features need in the kernel}\\
-\hline
-pae& This kind of page tables is used \\
-pse& PAE needs PSE.\\
-msr & At least needed to enter long mode\\
-pge & Kernel optimization\\
-pat & Kernel optimization\\
-clflush& Kernel optimization\\
-
+\begin{tabular}{l|>{\tt}l}
+  \multicolumn{1}{l}{Feature}
+     & \multicolumn{1}{l}{\rmfamily Example instruction} \\\hline
+    CMOV & cmov \\
+    CX8 & cmpxchg8b \\
+    FPU & fld \\
+    FXSR & fxsave \\
+    MMX & emms \\
+    OSFXSR & fxsave \\
+    SCE & syscall \\
+    SSE & cvtss2si \\
+    SSE2 & cvtpi2pd \\
   \end{tabular}
 \end{center}
-\Hrule
 \end{table}
 
+\clearpage
 \subsection{Data Representation}
 
 Within this specification, the term \emph{\textindex{\byte{}}} refers to
