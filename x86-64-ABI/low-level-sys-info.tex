@@ -6,31 +6,108 @@
 \subsection{Processor Architecture}
 
 Any program can expect that an \xARCH processor implements the
-features mentioned in table~\ref{features}.  Most feature names
+baseline features mentioned in table~\ref{features}.  Most feature names
 correspond to CPUID bits, as described in the processor manual.
 Exceptions are OSXFSR are and SCE, which are controlled by bits in the
 \reg{cr4} register and the \verb|IA32_EFER| MSR.
 
 \begin{table}
-\caption{Required Processor Features}\label{features}
+\caption{Micro-Architecture Levels}\label{features}
   \begin{center}
-\begin{tabular}{l|>{\tt}l}
-  \multicolumn{1}{l}{Feature}
+\begin{tabular}{>{\tt}l|l|>{\tt}l}
+  \multicolumn{1}{l}{Level Name} & \multicolumn{1}{l}{CPU Feature}
      & \multicolumn{1}{l}{\rmfamily Example instruction} \\\hline
-    CMOV & cmov \\
-    CX8 & cmpxchg8b \\
-    FPU & fld \\
-    FXSR & fxsave \\
-    MMX & emms \\
-    OSFXSR & fxsave \\
-    SCE & syscall \\
-    SSE & cvtss2si \\
-    SSE2 & cvtpi2pd \\
+  \rmfamily (baseline)
+    & CMOV & cmov \\
+    & CX8 & cmpxchg8b \\
+    & FPU & fld \\
+    & FXSR & fxsave \\
+    & MMX & emms \\
+    & OSFXSR & fxsave \\
+    & SCE & syscall \\
+    & SSE & cvtss2si \\
+    & SSE2 & cvtpi2pd \\\hline
+  x86-64-v2
+    & CMPXCHG16B & cmpxchg16b \\
+    & LAHF-SAHF & lahf \\
+    & POPCNT &  popcnt \\
+    & SSE3 & addsubpd \\
+    & SSE4\symbol{95}1 & blendpd \\
+    & SSE4\symbol{95}2 & pcmpestri \\
+    & SSSE3 & phaddd \\\hline
+  x86-64-v3
+    & AVX & vzeroall \\
+    & AVX2 & vpermd \\
+    & BMI1 & andn \\
+    & BMI2 & bzhi \\
+    & F16C & vcvtph2ps \\
+    & FMA & vfmadd132pd \\
+    & LZCNT & lzcnt \\
+    & MOVBE & movbe\\
+    & OSXSAVE & xgetbv \\\hline
+  x86-64-v4
+    & AVX512F & kmovw \\
+    & AVX512BW & vdbpsadbw \\
+    & AVX512CD & vplzcntd \\
+    & AVX512DQ & vpmullq \\
+    & AVX512VL & \rmfamily n/a\\
   \end{tabular}
 \end{center}
 \end{table}
 
-\clearpage
+In addition to the \xARCH baseline architecture, several
+\textindex{micro-architecture levels} implemented by later CPU modules
+have been defined, starting at level \texttt{x86-64-v2}.  These levels
+are intended to support loading of optimized implementations on those
+systems that are compatible with them (see below).  The levels are
+cumulative in the sense that features from previous levels are
+implicitly included in later levels.
+
+Levels \texttt{x86-64-v3} and \texttt{x86-64-v4} are only available if
+the corresponding features have been fully enabled.  This means that
+the system must pass the full sequence of checks in the processor
+manual for these features, including verification of the XCR0 feature
+flags obtained using \texttt{xgetbv}.
+
+\subsubsection{Recommended Uses of Micro-Architecture Levels}
+
+The names for the micro-architecture levels of table~\ref{features}
+are expected to be used as directory names (to be searched by the
+dynamic linker, based on the levels supported by the current CPU), and
+by compilers, to select groups of CPU features.  Distributions may
+also specify that they require CPU support for a certain level.
+
+For example, to select the second level, \texttt{x86-64-v3}, a
+programmer would build a shared object with the
+\texttt{-march=x86-64-v3} GCC flag.  The resulting shared object needs
+to be installed into the directory
+\path{/usr/lib64/glibc-hwcaps/x86-64-v3} or
+\path{/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3} (in case of
+distributions with a multi-arch file system layout).  In order to
+support systems that only implement the K8 baseline, a fallback
+implementation must be installed into the default locations,
+\path{/usr/lib64} or \path{/usr/lib/x66_64-linux/gnu}.  It has to be
+built with \texttt{-march=x86-64} (the upstream GCC default).  If this
+guideline is not followed, loading the library will fail on systems
+that do not support the level for which the optimized shared object
+was built.
+
+Shared objects that are installed under the matching
+\texttt{glibc-hwcaps} subdirectory can use the CPU features for this
+level and earlier levels without further detection logic.  Run-time
+detection for other CPU features not listed in this section, or listed
+only under later levels, is still required (even if all current CPUs
+implement certain CPU features together).
+
+If a distribution requires support for a certain level, they build
+everything with the appropriate \texttt{-march=} option and install
+the built binaries in the default file system locations.  When
+targeting such distributions, programmers can build their binaries
+with the same \texttt{-march=} option and install them into the
+default locations.  Optimized shared objects for later levels can
+still be installed into subdirectories with the appropriate name.
+
+
 \subsection{Data Representation}
 
 Within this specification, the term \emph{\textindex{\byte{}}} refers to
