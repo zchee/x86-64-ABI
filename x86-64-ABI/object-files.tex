@@ -582,6 +582,17 @@ Storage Descriptors for IA32 and AMD64/EM64T''\footnote{This document
 In order to make this document self-contained, a description of the
 TLS relocations follows.
 
+The \reg{fs} segment register is used to implement the thread pointer.
+The linear address of the thread pointer is stored at offset 0 relative
+to the \reg{fs} segment register.  The following code loads the thread
+pointer in the \reg{rax} register:
+
+\begin{footnotesize}
+\begin{verbatim}
+        movq        %fs:0, %rax
+\end{verbatim}
+\end{footnotesize}
+
 \begin{sloppypar}
 \texttt{R_X86_64_DTPMOD64} resolves to the index of the dynamic thread
 vector entry that points to the base address of the TLS block

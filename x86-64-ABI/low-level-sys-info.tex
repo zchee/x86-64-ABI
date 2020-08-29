@@ -712,7 +712,7 @@ arguments & No\\
 \reg{k0}--\reg{k7} & temporary registers & No\\
 \reg{st0},\reg{st1} & temporary registers, used to return \code{long double} arguments & No \\
 \reg{st2}--\reg{st7} & temporary registers & No \\
-\reg{fs}& Reserved for system (as thread specific data register) & No\\
+\reg{fs}& thread pointer & Yes\\
 \code{mxcsr}& SSE2 control and status word & partial\\
 \code{x87 SW}& x87 status word & No\\
 \code{x87 CW}& x87 control word & Yes\\
