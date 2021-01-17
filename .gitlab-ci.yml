@@ -9,4 +9,5 @@ build:
     - cd x86-64-ABI && make pdf
   artifacts:
     paths:
-      - "x86-64-ABI/*.pdf"
+      - "x86-64-ABI/abi.pdf"
+    expose_as: 'PDF'
