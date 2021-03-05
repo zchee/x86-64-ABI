@@ -481,7 +481,7 @@ is aligned to 512 bytes.}
 In other words, the stack needs to be 16 (32 or 64) byte aligned
 immediately before the call instruction is executed. Once control has
 been transferred to the function entry point, i.e.~immediately after the
-return value has been pushed, \RSP points to the return address, and the
+return address has been pushed, \RSP points to the return address, and the
 value of $(\RSP + 8)$ is a multiple of $16$ ($32$ or $64$).
 \footnote{The conventional use of \RBP{} as a frame
   pointer for the stack frame may be avoided by using \RSP (the stack
