@@ -564,7 +564,7 @@ with the exception that arguments of type \code{__int128} that are
 stored in memory must be aligned on a 16-byte boundary.
 
 \item Arguments of \code{complex T} where \code{T} is one of the types
-  \code{_Float16, float or double} are treated as if they are
+  \code{_Float16, float, double or __float128} are treated as if they are
   implemented as:
 \begin{verbatim}
 struct complexT {
