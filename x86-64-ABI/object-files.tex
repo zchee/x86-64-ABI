@@ -553,11 +553,13 @@ relocation zero-extends (sign-extends) to the original 64-bit value.
 
 \begin{sloppypar}
 A program or object file using \texttt{R_X86_64_8},
-\texttt{R_X86_64_16}, \texttt{R_X86_64_PC16} or \texttt{R_X86_64_PC8}
+\texttt{R_X86_64_16} or \texttt{R_X86_64_PC8}
 relocations is not conformant to this ABI, these relocations are only
 added for documentation purposes.  The \texttt{R_X86_64_16}, and
 \texttt{R_X86_64_8} relocations truncate the computed value to 16-bits
-resp. 8-bits.
+resp. 8-bits.  The \texttt{R_X86_64_PC16} relocation truncates the computed
+value to 16 bit, and the linker should verify that it sign-extends to the
+original value.
 \end{sloppypar}
 
 \begin{sloppypar}
